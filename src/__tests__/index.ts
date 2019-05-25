@@ -143,13 +143,36 @@ describe("Loop", () => {
 
   test("can subscribe to model changes", done => {
     const loop = new Loop(defaultModel, update, [], initiator, []);
-    loop.on(model => {
+    const callback = (model: Model) => {
       expect(model.counter).toBe(1);
       done();
-    });
+    };
+    loop.on(callback);
 
     expect(loop.currentModel.counter).toBe(0);
     loop.dispatch({ type: "incremented" });
+
+    loop.off(callback);
+  }, 10);
+
+  test("can subscribe to model changes multiple times", () => {
+    const loop = new Loop(defaultModel, update, [], initiator, []);
+    const cb1 = jest.fn();
+    const cb2 = jest.fn();
+
+    loop.on(cb1);
+    loop.dispatch({ type: "incremented" });
+
+    expect(cb1).toHaveBeenCalledTimes(1);
+
+    loop.on(cb2);
+    loop.dispatch({ type: "incremented" });
+
+    expect(cb1).toHaveBeenCalledTimes(2);
+    expect(cb2).toHaveBeenCalledTimes(1);
+
+    loop.off(cb1);
+    loop.off(cb2);
   }, 10);
 
   test("can unsubscribe to model changes", () => {
@@ -164,7 +187,28 @@ describe("Loop", () => {
     loop.off(callback);
     loop.dispatch({ type: "incremented" });
     expect(callback).toHaveBeenCalledTimes(1);
+    loop.off(callback);
   });
+
+  test("can unsubscribe after subscribing multiple times", () => {
+    const loop = new Loop(defaultModel, update, [], initiator, []);
+    const cb1 = jest.fn();
+    const cb2 = jest.fn();
+
+    loop.on(cb1);
+    loop.dispatch({ type: "incremented" });
+
+    expect(cb1).toHaveBeenCalledTimes(1);
+
+    loop.off(cb1);
+    loop.on(cb2);
+    loop.dispatch({ type: "incremented" });
+
+    expect(cb1).toHaveBeenCalledTimes(1);
+    expect(cb2).toHaveBeenCalledTimes(1);
+
+    loop.off(cb2);
+  }, 10);
 
   test("can unsubscribe without failing", () => {
     const loop = new Loop(defaultModel, update, [], initiator, []);
