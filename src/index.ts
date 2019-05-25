@@ -21,8 +21,8 @@ type Listener<Event> = (event: Event) => void;
 export class Loop<Model, Event, Effect> {
   currentModel: Model;
   private updater: Updater<Model, Event, Effect>;
-  private listeners: Listener<Model>[] = [];
   private effectHandlers: EffectHandler<Effect, Event>[];
+  private listeners: Listener<Model>[] = [];
 
   constructor(
     defaultModel: Model,
