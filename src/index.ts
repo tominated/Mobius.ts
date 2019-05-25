@@ -19,19 +19,50 @@ type Dispatch<Event> = (event: Event) => void;
 type Listener<Event> = (event: Event) => void;
 
 export class Loop<Model, Event, Effect> {
+  currentModel: Model;
+  private updater: Updater<Model, Event, Effect>;
+  private listeners: Listener<Model>[] = [];
+  private effectHandlers: EffectHandler<Effect, Event>[];
+
   constructor(
-    _defaultModel: Model,
-    _updater: Updater<Model, Event, Effect>,
-    _effectHandlers: EffectHandler<Effect, Event>[],
-    _initiator: Initiator<Model, Effect>,
-    _eventSources: EventSource<Event>[]
-  ) {}
+    defaultModel: Model,
+    updater: Updater<Model, Event, Effect>,
+    effectHandlers: EffectHandler<Effect, Event>[],
+    initiator: Initiator<Model, Effect>,
+    eventSources: EventSource<Event>[]
+  ) {
+    this.currentModel = defaultModel;
+    this.updater = updater;
+    this.effectHandlers = effectHandlers;
 
-  on = (_listener: Listener<Model>) => {};
+    const next = initiator(this.currentModel);
+    this.handleNext(next);
 
-  off = (_listener: Listener<Model>) => {};
+    eventSources.forEach(eventSource => eventSource(this.dispatch));
+  }
 
-  dispatch = (_event: Event) => {};
+  on = (listener: Listener<Model>) => {
+    this.listeners.push(listener);
+  };
+
+  off = (listener: Listener<Model>) => {
+    const index = this.listeners.indexOf(listener);
+    if (index > -1) this.listeners.splice(index, 1);
+  };
+
+  dispatch = (event: Event) => {
+    const next = this.updater(this.currentModel, event);
+    this.handleNext(next);
+
+    this.listeners.forEach(listener => listener(this.currentModel));
+  };
+
+  handleNext = (next: Next<Model, Effect>) => {
+    if (next.model) this.currentModel = next.model;
+    next.effects.forEach(effect => {
+      this.effectHandlers.forEach(handler => handler(effect, this.dispatch));
+    });
+  };
 }
 
 export function next<Model, Effect>(
