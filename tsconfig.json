@@ -7,6 +7,7 @@
     "outDir": "./dist",
     "declarationDir": "./dist",
     "incremental": true,
+    "esModuleInterop": true,
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
