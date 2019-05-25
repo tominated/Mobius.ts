@@ -78,6 +78,19 @@ describe("Loop", () => {
     expect(loop).toBeDefined();
   });
 
+  test("can create simple loop", () => {
+    const update = (model: Model, event: Event): Next<Model, never> => {
+      switch (event.type) {
+        case "incremented":
+          return next({ counter: model.counter + 1 });
+        case "decremented":
+          return next({ counter: model.counter - 1 });
+      }
+    };
+    const loop = Loop.simpleLoop(defaultModel, update);
+    expect(loop).toBeDefined();
+  });
+
   test("updates the model", () => {
     const loop = new Loop(defaultModel, update, [], initiator, []);
     expect(loop.currentModel.counter).toBe(0);
