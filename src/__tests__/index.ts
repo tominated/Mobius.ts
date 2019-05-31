@@ -75,7 +75,7 @@ describe("Loop", () => {
   const initiator = (_model: Model) => noChange<Model, Effect>();
 
   test("can create loop", () => {
-    const loop = new Loop(defaultModel, update, [], initiator, []);
+    const loop = new Loop(defaultModel, update, [], [], initiator);
     expect(loop).toBeDefined();
   });
 
@@ -93,7 +93,7 @@ describe("Loop", () => {
   });
 
   test("updates the model", () => {
-    const loop = new Loop(defaultModel, update, [], initiator, []);
+    const loop = new Loop(defaultModel, update, [], [], initiator);
     expect(loop.currentModel.counter).toBe(0);
     loop.dispatch({ type: "incremented" });
     expect(loop.currentModel.counter).toBe(1);
@@ -101,7 +101,7 @@ describe("Loop", () => {
 
   test("dispatches effects", () => {
     const handleEffect = jest.fn();
-    const loop = new Loop(defaultModel, update, [handleEffect], initiator, []);
+    const loop = new Loop(defaultModel, update, [handleEffect], [], initiator);
     expect(handleEffect).not.toBeCalled();
     loop.dispatch({ type: "incremented" });
     expect(handleEffect).toHaveBeenCalledWith(
@@ -114,7 +114,7 @@ describe("Loop", () => {
     const handleEffect = jest.fn();
     const initiator = (_model: Model) =>
       dispatchEffects<Model, Effect>([{ type: "playSound" }]);
-    const loop = new Loop(defaultModel, update, [handleEffect], initiator, []);
+    const loop = new Loop(defaultModel, update, [handleEffect], [], initiator);
 
     expect(loop.currentModel.counter).toBe(0);
     expect(handleEffect).toHaveBeenCalledWith(
@@ -133,7 +133,7 @@ describe("Loop", () => {
 
     const initiator = (_model: Model) =>
       dispatchEffects<Model, Effect>([{ type: "playSound" }]);
-    const loop = new Loop(defaultModel, update, [], initiator, [eventSource]);
+    const loop = new Loop(defaultModel, update, [], [eventSource], initiator);
 
     expect(loop.currentModel.counter).toBe(0);
     setTimeout(() => {
@@ -143,7 +143,7 @@ describe("Loop", () => {
   }, 10);
 
   test("can subscribe to model changes", done => {
-    const loop = new Loop(defaultModel, update, [], initiator, []);
+    const loop = new Loop(defaultModel, update, [], [], initiator);
     const callback = (model: Model) => {
       expect(model.counter).toBe(1);
       done();
@@ -157,7 +157,7 @@ describe("Loop", () => {
   }, 10);
 
   test("can subscribe to model changes multiple times", () => {
-    const loop = new Loop(defaultModel, update, [], initiator, []);
+    const loop = new Loop(defaultModel, update, [], [], initiator);
     const cb1 = jest.fn();
     const cb2 = jest.fn();
 
@@ -177,7 +177,7 @@ describe("Loop", () => {
   }, 10);
 
   test("can unsubscribe to model changes", () => {
-    const loop = new Loop(defaultModel, update, [], initiator, []);
+    const loop = new Loop(defaultModel, update, [], [], initiator);
     const callback = jest.fn();
     loop.on(callback);
 
@@ -192,7 +192,7 @@ describe("Loop", () => {
   });
 
   test("can unsubscribe after subscribing multiple times", () => {
-    const loop = new Loop(defaultModel, update, [], initiator, []);
+    const loop = new Loop(defaultModel, update, [], [], initiator);
     const cb1 = jest.fn();
     const cb2 = jest.fn();
 
@@ -212,7 +212,7 @@ describe("Loop", () => {
   }, 10);
 
   test("can unsubscribe without failing", () => {
-    const loop = new Loop(defaultModel, update, [], initiator, []);
+    const loop = new Loop(defaultModel, update, [], [], initiator);
     const callback = jest.fn();
     loop.off(callback);
     expect(callback).not.toHaveBeenCalled();

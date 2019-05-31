@@ -28,15 +28,17 @@ export class Loop<Model, Event, Effect> {
     defaultModel: Model,
     updater: Updater<Model, Event, Effect>,
     effectHandlers: EffectHandler<Effect, Event>[],
-    initiator: Initiator<Model, Effect>,
-    eventSources: EventSource<Event>[]
+    eventSources: EventSource<Event>[],
+    initiator?: Initiator<Model, Effect>
   ) {
     this.currentModel = defaultModel;
     this.updater = updater;
     this.effectHandlers = effectHandlers;
 
-    const next = initiator(this.currentModel);
-    this.handleNext(next);
+    if (initiator) {
+      const next = initiator(this.currentModel);
+      this.handleNext(next);
+    }
 
     eventSources.forEach(eventSource => eventSource(this.dispatch));
   }
@@ -45,8 +47,7 @@ export class Loop<Model, Event, Effect> {
     defaultModel: Model,
     updater: Updater<Model, Event, never>
   ): Loop<Model, Event, never> {
-    const initiator: Initiator<Model, never> = () => noChange();
-    return new Loop(defaultModel, updater, [], initiator, []);
+    return new Loop(defaultModel, updater, [], []);
   }
 
   on = (listener: Listener<Model>) => {
