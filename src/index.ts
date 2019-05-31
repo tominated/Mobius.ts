@@ -89,3 +89,29 @@ export function dispatchEffects<Model, Effect>(
 export function noChange<Model, Effect>(): Next<Model, Effect> {
   return { model: null, effects: [] };
 }
+
+type UpdaterMapping<Model, Event, Effect> = {
+  [K in keyof Model]: Updater<Model[K], Event, Effect>
+};
+
+export function combineUpdaters<Model, Event, Effect>(
+  mapping: UpdaterMapping<Model, Event, Effect>
+): Updater<Model, Event, Effect> {
+  return (model: Model, event: Event): Next<Model, Effect> => {
+    const newModel: Model = { ...model };
+    const effects: Effect[] = [];
+
+    for (let key in mapping) {
+      const updater = mapping[key];
+      const subNext = updater(model[key], event);
+
+      if (subNext.model) {
+        newModel[key] = subNext.model;
+      }
+
+      effects.push.apply(effects, subNext.effects);
+    }
+
+    return next(newModel, effects);
+  };
+}

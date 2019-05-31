@@ -4,6 +4,7 @@ import {
   next,
   dispatchEffects,
   noChange,
+  combineUpdaters,
   EventSource
 } from "../index";
 
@@ -215,5 +216,45 @@ describe("Loop", () => {
     const callback = jest.fn();
     loop.off(callback);
     expect(callback).not.toHaveBeenCalled();
+  });
+});
+
+describe("combineUpdaters", () => {
+  type Model = { updateA: ModelA };
+  type ModelA = { counter: number };
+  type Event = { type: "incremented" } | { type: "decremented" };
+  type Effect = { type: "playSound" };
+
+  const updateA = (model: ModelA, event: Event): Next<ModelA, Effect> => {
+    switch (event.type) {
+      case "incremented":
+        return next({ counter: model.counter + 1 }, [{ type: "playSound" }]);
+      case "decremented":
+        return next({ counter: model.counter - 1 });
+    }
+  };
+
+  it("produces new model", () => {
+    const updater = combineUpdaters<Model, Event, Effect>({ updateA });
+    const model = { updateA: { counter: 0 } };
+    const updaterNext = updater(model, { type: "incremented" });
+    expect(updaterNext.model).toEqual({ updateA: { counter: 1 } });
+  });
+
+  it("produces an effect", () => {
+    const updater = combineUpdaters<Model, Event, Effect>({ updateA });
+    const model = { updateA: { counter: 0 } };
+    const updaterNext = updater(model, { type: "incremented" });
+    expect(updaterNext.effects).toEqual([{ type: "playSound" }]);
+  });
+
+  it("works when nested", () => {
+    const updaterNest = combineUpdaters<Model, Event, Effect>({ updateA });
+    const updater = combineUpdaters<{ updaterNest: Model }, Event, Effect>({
+      updaterNest
+    });
+    const model = { updaterNest: { updateA: { counter: 0 } } };
+    const updaterNext = updater(model, { type: "incremented" });
+    expect(updaterNext.effects).toEqual([{ type: "playSound" }]);
   });
 });
