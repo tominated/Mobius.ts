@@ -12,7 +12,8 @@
   "scripts": {
     "build": "rollup -c",
     "build:watch": "rollup -cw",
-    "test": "jest"
+    "test": "jest",
+    "test:ci": "jest --ci --collectCoverage=true"
   },
   "devDependencies": {
     "@types/jest": "^24.0.13",
